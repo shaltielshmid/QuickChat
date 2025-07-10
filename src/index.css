@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: theme('colors.gray.200');
+  }
+  body {
+    @apply text-gray-900;
+    margin: 0;
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .overlay-backdrop {
+    @apply fixed inset-0;
+    background: transparent;
+  }
+  
+  .overlay-window {
+    @apply w-[520px] max-h-[80vh] overflow-hidden flex flex-col;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    resize: vertical;
+    margin: 20px auto;
+  }
+  
+  .overlay-window.compact {
+    min-height: auto;
+  }
+  
+  .overlay-window.expanded {
+    min-height: 370px;
+  }
+  
+  .overlay-window.settings {
+    max-height: 80vh;
+    height: 65vh;
+  }
+  
+  .toolbar {
+    @apply flex items-center justify-between px-4 py-3;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .input-area {
+    @apply p-4;
+  }
+  
+  .response-area {
+    @apply px-4 pb-4 overflow-y-auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Improved markdown styling */
+  .response-area .prose {
+    @apply max-w-none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .response-area .prose pre {
+    @apply bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  .response-area .prose code {
+    @apply bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .response-area .prose pre code {
+    @apply bg-transparent text-gray-100 p-0;
+  }
+
+  .response-area .prose p {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .action-buttons {
+    @apply flex justify-end gap-2 px-4 pb-3;
+  }
+  
+  .btn-ghost {
+    @apply text-xs text-gray-600 hover:text-gray-800 transition-all cursor-pointer;
+    @apply bg-gray-100/50 hover:bg-gray-200/70 px-3 py-2 rounded-md;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-ghost:hover {
+    @apply shadow-sm;
+  }
+  
+  .hotkey-hint {
+    @apply text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded border;
+    @apply absolute top-3 right-16 pointer-events-none;
+  }
+  
+  .settings-dialog {
+    @apply fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    @apply w-[500px] h-[500px] z-50;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+  }
+  
+  .settings-dialog::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .settings-dialog {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .settings-backdrop {
+    @apply fixed inset-0 bg-black/30 backdrop-blur-sm z-40;
+  }
+}
