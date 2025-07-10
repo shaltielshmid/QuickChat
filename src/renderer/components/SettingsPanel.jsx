@@ -1,0 +1,144 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import PropTypes from 'prop-types';
+
+const defaultSystemPrompt = 'You are a helpful AI assistant. Follow these rules in every response:\n\n1. **Be concise.** Provide the shortest answer that fully addresses the user\'s question—no background, no extra commentary.\n\n2. **Code-only responses.** If the user asks for code or a shell command, reply with *only* the code in a properly fenced code block. Do not include any explanation, commentary, or surrounding text.\n\n3. **No unsolicited information.** Unless the user explicitly asks for examples, alternatives, or details, do not add any additional information.\n\n4. **Clarify when needed.** If the user\'s request is ambiguous or missing critical details, ask a brief clarifying question—but still keep it as short as possible.';
+
+const SettingsPanel = ({ onClose }) => {
+  const [apiKey, setApiKey] = useState('');
+  const [model, setModel] = useState('gpt-4.1-mini');
+  const [systemPrompt, setSystemPrompt] = useState('');
+  const [clearOnReload, setClearOnReload] = useState(true);
+  
+  const loadSettings = useCallback(async () => {
+    const key = localStorage.getItem('openaiApiKey') || '';
+    const mdl = localStorage.getItem('model') || 'gpt-4.1-mini';
+    const sysPrompt = localStorage.getItem('systemPrompt') || defaultSystemPrompt;
+    const clearReload = localStorage.getItem('clearOnReload') !== 'false'; // default true
+    
+    setApiKey(key);
+    setModel(mdl);
+    setSystemPrompt(sysPrompt);
+    setClearOnReload(clearReload);
+  }, []);
+
+  const saveApiKey = useCallback(async (newKey) => {
+    localStorage.setItem('openaiApiKey', newKey);
+  }, []);
+
+  const saveModel = useCallback(async (newModel) => {
+    localStorage.setItem('model', newModel);
+  }, []);
+
+  const saveSystemPrompt = useCallback(async (newPrompt) => {
+    localStorage.setItem('systemPrompt', newPrompt);
+  }, []);
+
+  const saveClearOnReload = useCallback(async (value) => {
+    localStorage.setItem('clearOnReload', value.toString());
+  }, []);
+
+  const restoreDefaultPrompt = useCallback(async () => {
+    setSystemPrompt(defaultSystemPrompt);
+    await saveSystemPrompt(defaultSystemPrompt);
+  }, [saveSystemPrompt]);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-6 border-b border-gray-200/50">
+        <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 text-sm"
+        >
+          esc
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            OpenAI API Key
+          </label>
+          <input
+            type="password"
+            value={apiKey}
+            onChange={(e) => {
+              setApiKey(e.target.value);
+              saveApiKey(e.target.value);
+            }}
+            placeholder="sk-..."
+            className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Model
+          </label>
+          <select
+            value={model}
+            onChange={(e) => {
+              setModel(e.target.value);
+              saveModel(e.target.value);
+            }}
+            className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          >
+            <option value="gpt-4.1">GPT-4.1</option>
+            <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+          </select>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Clear on Window Reload
+            </label>
+            <input
+              type="checkbox"
+              checked={clearOnReload}
+              onChange={(e) => {
+                setClearOnReload(e.target.checked);
+                saveClearOnReload(e.target.checked);
+              }}
+              className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">
+              System Prompt
+            </label>
+            <button
+              onClick={restoreDefaultPrompt}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+            >
+              Restore Default
+            </button>
+          </div>
+          <textarea
+            value={systemPrompt}
+            onChange={(e) => {
+              setSystemPrompt(e.target.value);
+              saveSystemPrompt(e.target.value);
+            }}
+            placeholder="Instructions for how the AI should behave..."
+            className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+            rows={12}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+SettingsPanel.propTypes = {
+  onClose: PropTypes.func.isRequired
+};
+
+export default SettingsPanel;
