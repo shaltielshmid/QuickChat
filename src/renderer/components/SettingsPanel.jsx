@@ -4,25 +4,39 @@ import PropTypes from 'prop-types';
 const defaultSystemPrompt = 'You are a helpful AI assistant. Follow these rules in every response:\n\n1. **Be concise.** Provide the shortest answer that fully addresses the user\'s question—no background, no extra commentary.\n\n2. **Code-only responses.** If the user asks for code or a shell command, reply with *only* the code in a properly fenced code block. Do not include any explanation, commentary, or surrounding text.\n\n3. **No unsolicited information.** Unless the user explicitly asks for examples, alternatives, or details, do not add any additional information.\n\n4. **Clarify when needed.** If the user\'s request is ambiguous or missing critical details, ask a brief clarifying question—but still keep it as short as possible.';
 
 const SettingsPanel = ({ onClose }) => {
-  const [apiKey, setApiKey] = useState('');
+  const [openaiApiKey, setOpenaiApiKey] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
   const [model, setModel] = useState('gpt-4.1-mini');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [clearOnReload, setClearOnReload] = useState(true);
+  const [apiProvider, setApiProvider] = useState('openai');
   
   const loadSettings = useCallback(async () => {
-    const key = localStorage.getItem('openaiApiKey') || '';
+    const openaiKey = localStorage.getItem('openaiApiKey') || '';
+    const geminiKey = localStorage.getItem('geminiApiKey') || '';
+    const provider = localStorage.getItem('apiProvider') || 'openai';
     const mdl = localStorage.getItem('model') || 'gpt-4.1-mini';
     const sysPrompt = localStorage.getItem('systemPrompt') || defaultSystemPrompt;
     const clearReload = localStorage.getItem('clearOnReload') !== 'false'; // default true
     
-    setApiKey(key);
+    setOpenaiApiKey(openaiKey);
+    setGeminiApiKey(geminiKey);
+    setApiProvider(provider);
     setModel(mdl);
     setSystemPrompt(sysPrompt);
     setClearOnReload(clearReload);
   }, []);
 
-  const saveApiKey = useCallback(async (newKey) => {
+  const saveOpenaiApiKey = useCallback(async (newKey) => {
     localStorage.setItem('openaiApiKey', newKey);
+  }, []);
+
+  const saveGeminiApiKey = useCallback(async (newKey) => {
+    localStorage.setItem('geminiApiKey', newKey);
+  }, []);
+
+  const saveApiProvider = useCallback(async (provider) => {
+    localStorage.setItem('apiProvider', provider);
   }, []);
 
   const saveModel = useCallback(async (newModel) => {
@@ -61,19 +75,56 @@ const SettingsPanel = ({ onClose }) => {
       <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            OpenAI API Key
+            API Provider
           </label>
-          <input
-            type="password"
-            value={apiKey}
+          <select
+            value={apiProvider}
             onChange={(e) => {
-              setApiKey(e.target.value);
-              saveApiKey(e.target.value);
+              setApiProvider(e.target.value);
+              saveApiProvider(e.target.value);
             }}
-            placeholder="sk-..."
             className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
+          >
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Google Gemini</option>
+          </select>
         </div>
+
+        {apiProvider === 'openai' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              OpenAI API Key
+            </label>
+            <input
+              type="password"
+              value={openaiApiKey}
+              onChange={(e) => {
+                setOpenaiApiKey(e.target.value);
+                saveOpenaiApiKey(e.target.value);
+              }}
+              placeholder="sk-..."
+              className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+        )}
+
+        {apiProvider === 'gemini' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Google Gemini API Key
+            </label>
+            <input
+              type="password"
+              value={geminiApiKey}
+              onChange={(e) => {
+                setGeminiApiKey(e.target.value);
+                saveGeminiApiKey(e.target.value);
+              }}
+              placeholder="AI..."
+              className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -87,8 +138,18 @@ const SettingsPanel = ({ onClose }) => {
             }}
             className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            <option value="gpt-4.1">GPT-4.1</option>
-            <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+            {apiProvider === 'openai' && (
+              <>
+                <option value="gpt-4.1">GPT-4.1</option>
+                <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+              </>
+            )}
+            {apiProvider === 'gemini' && (
+              <>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-flash-lite-preview-06-17">Gemini 2.5 Flash Lite</option>
+              </>
+            )}
           </select>
         </div>
 
