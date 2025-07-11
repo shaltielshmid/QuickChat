@@ -127,7 +127,10 @@ const generateGeminiResponse = async ({
     model,
     contents: userPrompt,
     config: {
-      systemInstruction: systemPrompt
+      systemInstruction: systemPrompt,
+      thinkingConfig: {
+        thinkingBudget: 0
+      }
     },
     generationConfig: {
       temperature: 0.7,
