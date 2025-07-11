@@ -24,7 +24,7 @@ const Overlay = () => {
   } = useChat();
 
   const { copySuccess, handleCopy } = useCopy();
-  const { handleClose } = useWindowManager(showSettings);
+  const { handleClose } = useWindowManager(showSettings, clearChat);
 
   // Clear on reload functionality
   useEffect(() => {

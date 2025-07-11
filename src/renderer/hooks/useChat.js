@@ -64,7 +64,7 @@ export const useChat = () => {
     setError('');
     setOriginalPrompt('');
   }, []);
-
+    
   return {
     input,
     setInput,
