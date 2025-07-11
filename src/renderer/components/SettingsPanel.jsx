@@ -3,6 +3,25 @@ import PropTypes from 'prop-types';
 
 const defaultSystemPrompt = 'You are a helpful AI assistant. Follow these rules in every response:\n\n1. **Be concise.** Provide the shortest answer that fully addresses the user\'s question—no background, no extra commentary.\n\n2. **Code-only responses.** If the user asks for code or a shell command, reply with *only* the code in a properly fenced code block. Do not include any explanation, commentary, or surrounding text.\n\n3. **No unsolicited information.** Unless the user explicitly asks for examples, alternatives, or details, do not add any additional information.\n\n4. **Clarify when needed.** If the user\'s request is ambiguous or missing critical details, ask a brief clarifying question—but still keep it as short as possible.';
 
+// Define available models for each provider
+const providerModels = {
+  openai: [
+    { id: 'gpt-4.1', name: 'GPT-4.1' },
+    { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' }
+  ],
+  gemini: [
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+    { id: 'gemini-2.5-flash-lite-preview-06-17', name: 'Gemini 2.5 Flash Lite' }
+  ]
+};
+
+// Get default model for a provider
+const getDefaultModelForProvider = (provider) => {
+  if (provider === 'openai') return 'gpt-4.1-mini';
+  if (provider === 'gemini') return 'gemini-2.5-flash';
+  return 'gpt-4.1-mini'; // Fallback to OpenAI
+};
+
 const SettingsPanel = ({ onClose }) => {
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
@@ -35,13 +54,18 @@ const SettingsPanel = ({ onClose }) => {
     localStorage.setItem('geminiApiKey', newKey);
   }, []);
 
-  const saveApiProvider = useCallback(async (provider) => {
-    localStorage.setItem('apiProvider', provider);
-  }, []);
-
   const saveModel = useCallback(async (newModel) => {
     localStorage.setItem('model', newModel);
   }, []);
+
+  const saveApiProvider = useCallback(async (provider) => {
+    localStorage.setItem('apiProvider', provider);
+    
+    // Update model to default for the new provider
+    const defaultModel = getDefaultModelForProvider(provider);
+    setModel(defaultModel);
+    saveModel(defaultModel);
+  }, [saveModel]);
 
   const saveSystemPrompt = useCallback(async (newPrompt) => {
     localStorage.setItem('systemPrompt', newPrompt);
@@ -138,18 +162,11 @@ const SettingsPanel = ({ onClose }) => {
             }}
             className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            {apiProvider === 'openai' && (
-              <>
-                <option value="gpt-4.1">GPT-4.1</option>
-                <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
-              </>
-            )}
-            {apiProvider === 'gemini' && (
-              <>
-                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                <option value="gemini-2.5-flash-lite-preview-06-17">Gemini 2.5 Flash Lite</option>
-              </>
-            )}
+            {providerModels[apiProvider]?.map(model => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))}
           </select>
         </div>
 

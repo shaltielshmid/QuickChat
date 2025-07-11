@@ -139,6 +139,7 @@ const generateGeminiResponse = async ({
     streamGenerateContent: true
   };
 
+
   // Get the model and generate content
   const response = await ai.models.generateContentStream(generationConfig);
 
