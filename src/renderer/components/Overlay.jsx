@@ -16,6 +16,7 @@ const Overlay = () => {
     input,
     setInput,
     response,
+    isThinking,
     isLoading,
     error,
     originalPrompt,
@@ -157,6 +158,7 @@ const Overlay = () => {
         input={input}
         setInput={setInput}
         response={response}
+        isThinking={isThinking}
         isLoading={isLoading}
         error={error}
         originalPrompt={originalPrompt}

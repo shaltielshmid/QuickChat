@@ -1,41 +1,22 @@
 import { OpenAI } from 'openai';
 import { GoogleGenAI } from '@google/genai'
+import { Ollama } from 'ollama/browser'
 
 /**
  * AI Service - Abstraction for different AI providers
- * Supports OpenAI and Google Gemini APIs
+ * Supports OpenAI, Google Gemini, and Ollama APIs
  */
-
-/**
- * Creates an AI client based on the selected provider
- * @param {string} provider - 'openai' or 'gemini'
- * @param {string} apiKey - API key for the selected provider
- * @returns {Object} - AI client instance
- */
-export const createAIClient = async (provider, apiKey) => {
-  if (provider === 'openai') {
-    return new OpenAI({
-      apiKey,
-      dangerouslyAllowBrowser: true
-    });
-  } else if (provider === 'gemini') {
-    return new GoogleGenAI({
-      vertexai: false,
-      apiKey
-    });
-  }
-  throw new Error(`Unsupported provider: ${provider}`);
-};
 
 /**
  * Generates a response using the selected AI provider
  * @param {Object} params - Parameters for the AI request
- * @param {string} params.provider - 'openai' or 'gemini'
- * @param {string} params.apiKey - API key for the selected provider
+ * @param {string} params.provider - 'openai', 'gemini', or 'ollama'
+ * @param {string} params.apiKey - API key for the selected provider (not needed for Ollama)
  * @param {string} params.model - Model name
  * @param {string} params.systemPrompt - System prompt
  * @param {string} params.userPrompt - User prompt
  * @param {Function} params.onChunk - Callback for streaming chunks
+ * @param {string} params.baseUrl - Base URL for Ollama (optional)
  * @returns {Promise<void>}
  */
 export const generateResponse = async ({
@@ -44,7 +25,8 @@ export const generateResponse = async ({
   model,
   systemPrompt,
   userPrompt,
-  onChunk
+  onChunk,
+  baseUrl
 }) => {
   if (provider === 'openai') {
     await generateOpenAIResponse({
@@ -57,6 +39,14 @@ export const generateResponse = async ({
   } else if (provider === 'gemini') {
     await generateGeminiResponse({
       apiKey,
+      model,
+      systemPrompt,
+      userPrompt,
+      onChunk
+    });
+  } else if (provider === 'ollama') {
+    await generateOllamaResponse({
+      baseUrl,
       model,
       systemPrompt,
       userPrompt,
@@ -78,8 +68,6 @@ const generateOpenAIResponse = async ({
   userPrompt,
   onChunk
 }) => {
-  const { OpenAI } = await import('openai');
-  
   const openai = new OpenAI({
     apiKey,
     dangerouslyAllowBrowser: true
@@ -115,8 +103,6 @@ const generateGeminiResponse = async ({
   userPrompt,
   onChunk
 }) => {
-  const { GoogleGenAI } = await import('@google/genai');
-  
   const ai = new GoogleGenAI({
     vertexai: false,
     apiKey
@@ -147,6 +133,41 @@ const generateGeminiResponse = async ({
   for await (const chunk of response) {
     if (chunk.text) {
       onChunk(chunk.text);
+    }
+  }
+};
+
+/**
+ * Generates a response using Ollama API (OpenAI-compatible endpoint)
+ * @param {Object} params - Parameters for the Ollama request
+ */
+const generateOllamaResponse = async ({
+  baseUrl,
+  model,
+  systemPrompt,
+  userPrompt,
+  onChunk
+}) => {
+
+  const ollama = new Ollama({
+    host: baseUrl,
+  });
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: userPrompt }
+  ];
+
+  const stream = await ollama.chat({
+    model,
+    messages,
+    stream: true
+  });
+
+  for await (const chunk of stream) {
+    const content = chunk.message.content;
+    if (content) {
+      onChunk(content);
     }
   }
 };

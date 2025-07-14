@@ -7,6 +7,7 @@ const ChatInterface = ({
   input,
   setInput,
   response,
+  isThinking,
   isLoading,
   error,
   originalPrompt,
@@ -19,7 +20,6 @@ const ChatInterface = ({
   responseRef
 }) => {
   const windowClass = `overlay-window relative ${!response && !error ? 'compact' : 'expanded'}`;
-
   return (
     <div className={windowClass}>
       <div className="toolbar">
@@ -66,7 +66,24 @@ const ChatInterface = ({
             ref={responseRef}
             className="prose prose-sm max-w-none text-gray-800"
           >
-            {response && <ReactMarkdown>{response}</ReactMarkdown>}
+            {response && (
+              <>
+                {isThinking ? (
+                  <div className="relative px-3 py-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <div className="flex space-x-0.5">
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      <span className="text-blue-700 font-medium text-xs">{response}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <ReactMarkdown>{response}</ReactMarkdown>
+                )}
+              </>
+            )}
             {isLoading && !response && (
               <div className="text-gray-500 text-sm">Thinking...</div>
             )}
@@ -97,6 +114,7 @@ ChatInterface.propTypes = {
   input: PropTypes.string.isRequired,
   setInput: PropTypes.func.isRequired,
   response: PropTypes.string.isRequired,
+  isThinking: PropTypes.bool.isRequired,
   isLoading: PropTypes.bool.isRequired,
   error: PropTypes.string.isRequired,
   originalPrompt: PropTypes.string.isRequired,

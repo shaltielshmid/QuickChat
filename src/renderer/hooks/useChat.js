@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { generateResponse } from '../services/aiService';
 
 export const useChat = () => {
@@ -22,8 +22,8 @@ export const useChat = () => {
       // Get the selected API provider
       const provider = localStorage.getItem('apiProvider') || 'openai';
       
-      // Get the appropriate API key based on the provider
-      let apiKey;
+      // Get the appropriate API key and base URL based on the provider
+      let apiKey, baseUrl;
       if (provider === 'openai') {
         apiKey = localStorage.getItem('openaiApiKey');
         if (!apiKey) {
@@ -34,6 +34,9 @@ export const useChat = () => {
         if (!apiKey) {
           throw new Error('Gemini API key not configured. Press Ctrl+, to set it up.');
         }
+      } else if (provider === 'ollama') {
+        baseUrl = localStorage.getItem('ollamaUrl') || 'http://localhost:11434';
+        apiKey = 'ollama'; // Required but unused for Ollama
       } else {
         throw new Error(`Unsupported provider: ${provider}`);
       }
@@ -48,6 +51,7 @@ export const useChat = () => {
         model,
         systemPrompt,
         userPrompt: prompt,
+        baseUrl,
         onChunk: (content) => {
           setResponse(prev => prev + content);
         }
@@ -65,11 +69,18 @@ export const useChat = () => {
     setError('');
     setOriginalPrompt('');
   }, []);
-    
+
+  const isThinking = useMemo(() => response.startsWith("<think>") && !response.includes("</think>"), [response]);
+  const finalResponse = useMemo(() => {
+    if (!response.startsWith("<think>")) return response;
+    return isThinking ? "Model is reasoning..." : response.substring(response.indexOf("</think>") + "</think>".length).trim();
+  }, [response, isThinking]);
+  
   return {
     input,
     setInput,
-    response,
+    response: finalResponse,
+    isThinking,
     isLoading,
     error,
     originalPrompt,

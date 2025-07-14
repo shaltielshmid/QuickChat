@@ -1,17 +1,25 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import Combobox from './Combobox';
 
 const defaultSystemPrompt = 'You are a helpful AI assistant. Follow these rules in every response:\n\n1. **Be concise.** Provide the shortest answer that fully addresses the user\'s question—no background, no extra commentary.\n\n2. **Code-only responses.** If the user asks for code or a shell command, reply with *only* the code in a properly fenced code block. Do not include any explanation, commentary, or surrounding text.\n\n3. **No unsolicited information.** Unless the user explicitly asks for examples, alternatives, or details, do not add any additional information.\n\n4. **Clarify when needed.** If the user\'s request is ambiguous or missing critical details, ask a brief clarifying question—but still keep it as short as possible.';
 
-// Define available models for each provider
+
+// Define suggested models for each provider
 const providerModels = {
   openai: [
-    { id: 'gpt-4.1', name: 'GPT-4.1' },
-    { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' }
+    'gpt-4.1',
+    'gpt-4.1-mini',
+    'gpt-4o',
+    'gpt-4o-mini'
   ],
   gemini: [
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-    { id: 'gemini-2.5-flash-lite-preview-06-17', name: 'Gemini 2.5 Flash Lite' }
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite-preview-06-17',
+    'gemini-2.5-pro'
+  ],
+  ollama: [
+    'qwen3'
   ]
 };
 
@@ -19,12 +27,14 @@ const providerModels = {
 const getDefaultModelForProvider = (provider) => {
   if (provider === 'openai') return 'gpt-4.1-mini';
   if (provider === 'gemini') return 'gemini-2.5-flash';
+  if (provider === 'ollama') return 'qwen3';
   return 'gpt-4.1-mini'; // Fallback to OpenAI
 };
 
 const SettingsPanel = ({ onClose }) => {
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
   const [model, setModel] = useState('gpt-4.1-mini');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [clearOnReload, setClearOnReload] = useState(true);
@@ -33,6 +43,7 @@ const SettingsPanel = ({ onClose }) => {
   const loadSettings = useCallback(async () => {
     const openaiKey = localStorage.getItem('openaiApiKey') || '';
     const geminiKey = localStorage.getItem('geminiApiKey') || '';
+    const ollamaBaseUrl = localStorage.getItem('ollamaUrl') || 'http://localhost:11434';
     const provider = localStorage.getItem('apiProvider') || 'openai';
     const mdl = localStorage.getItem('model') || 'gpt-4.1-mini';
     const sysPrompt = localStorage.getItem('systemPrompt') || defaultSystemPrompt;
@@ -40,6 +51,7 @@ const SettingsPanel = ({ onClose }) => {
     
     setOpenaiApiKey(openaiKey);
     setGeminiApiKey(geminiKey);
+    setOllamaUrl(ollamaBaseUrl);
     setApiProvider(provider);
     setModel(mdl);
     setSystemPrompt(sysPrompt);
@@ -52,6 +64,10 @@ const SettingsPanel = ({ onClose }) => {
 
   const saveGeminiApiKey = useCallback(async (newKey) => {
     localStorage.setItem('geminiApiKey', newKey);
+  }, []);
+
+  const saveOllamaUrl = useCallback(async (newUrl) => {
+    localStorage.setItem('ollamaUrl', newUrl);
   }, []);
 
   const saveModel = useCallback(async (newModel) => {
@@ -111,6 +127,7 @@ const SettingsPanel = ({ onClose }) => {
           >
             <option value="openai">OpenAI</option>
             <option value="gemini">Google Gemini</option>
+            <option value="ollama">Ollama</option>
           </select>
         </div>
 
@@ -150,24 +167,43 @@ const SettingsPanel = ({ onClose }) => {
           </div>
         )}
 
+        {apiProvider === 'ollama' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ollama Base URL
+            </label>
+            <input
+              type="text"
+              value={ollamaUrl}
+              onChange={(e) => {
+                setOllamaUrl(e.target.value);
+                saveOllamaUrl(e.target.value);
+              }}
+              placeholder="http://localhost:11434"
+              className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Default port is 11434. No API key required for Ollama.
+            </p>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Model
           </label>
-          <select
+          <Combobox
             value={model}
-            onChange={(e) => {
-              setModel(e.target.value);
-              saveModel(e.target.value);
-            }}
-            className="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            {providerModels[apiProvider]?.map(model => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </select>
+            onChange={useCallback((value) => {
+              setModel(value);
+              saveModel(value);
+            }, [saveModel])}
+            options={providerModels[apiProvider] || []}
+            placeholder="Type or select a model"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            You can type any model name or select from suggested models.
+          </p>
         </div>
 
         <div>

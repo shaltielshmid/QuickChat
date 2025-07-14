@@ -40,7 +40,8 @@
   }
   
   .overlay-window.expanded {
-    min-height: 370px;
+    max-height: 520px;
+    height: auto;
   }
   
   .overlay-window.settings {
